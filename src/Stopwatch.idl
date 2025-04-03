@@ -1,0 +1,19 @@
+namespace StopwatchCore
+{
+    [default_interface]
+    unsealed runtimeclass Stopwatch 
+    {
+        Stopwatch();
+
+        Double Duration{ get; };
+        Windows.Foundation.TimeSpan Interval{ get; set; };
+
+        Boolean Start();
+        Boolean Pause();
+        Boolean Resume();
+        Boolean Stop();
+        Boolean Reset();
+
+        event Windows.Foundation.TypedEventHandler<Stopwatch, Object> Working;
+    }
+}
