@@ -110,7 +110,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\StopwatchCore.vcxproj">
+    <ProjectReference Include="..\..\..\src\StopwatchCore.vcxproj">
       <Project>{2c5fc123-85f3-4831-bf5e-a8b0388012a6}</Project>
       <Name>StopwatchCore</Name>
     </ProjectReference>
