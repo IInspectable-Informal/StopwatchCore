@@ -4,31 +4,37 @@
 #include "Stopwatch.g.cpp"
 #endif
 
+using ns winrt;
+using ns Windows::Foundation;
+using ns std;
+using ns std::chrono;
+
 namespace winrt::StopwatchCore::implementation
 {
     Stopwatch::Stopwatch()
     {
-        Timer.Interval(milliseconds(95));
-        et = Timer.Tick({ this, &Stopwatch::Looper });
+
     }
 
     bool Stopwatch::Start()
     {
-        if (!IsRunning && !IsWorking)
+        if (_State == local::StopwatchState::Stopped)
         {
-            IsRunning = IsWorking = true;
+            _State = local::StopwatchState::Working;
             if (_Duration.count() == -1)
-            { PausedTime = high_resolution_clock::now(); }
-            Timer.Start();
+            {
+                PausedTime = steady_clock::now();
+            }
+            _Action = std::thread(&Stopwatch::Looper, this);
             return true;
         } return false;
     }
 
     bool Stopwatch::Pause()
     {
-        if (IsRunning && IsWorking)
+        if (_State == local::StopwatchState::Working)
         {
-            IsWorking = false;
+            _State = local::StopwatchState::Paused;
             return true;
         }
         return false;
@@ -36,9 +42,9 @@ namespace winrt::StopwatchCore::implementation
 
     bool Stopwatch::Resume()
     {
-        if (IsRunning && !IsWorking)
+        if (_State == local::StopwatchState::Paused)
         {
-            IsWorking = true;
+            _State = local::StopwatchState::Working;
             return true;
         }
         return false;
@@ -46,10 +52,10 @@ namespace winrt::StopwatchCore::implementation
 
     bool Stopwatch::Stop()
     {
-        if (IsRunning)
+        if (_State != local::StopwatchState::Stopped)
         {
-            IsRunning = IsWorking = false;
-            Timer.Stop();
+            _State = local::StopwatchState::Stopped;
+            _Action.join();
             return true;
         }
         return false;
@@ -59,8 +65,7 @@ namespace winrt::StopwatchCore::implementation
     {
         if (_Duration.count() != -1)
         {
-            if (IsRunning) { Timer.Stop(); }
-            IsRunning = IsWorking = false;
+            Stop();
             _Duration = nanoseconds(-1);
             return true;
         }
@@ -68,24 +73,27 @@ namespace winrt::StopwatchCore::implementation
     }
 
     //Private
-    void Stopwatch::Looper(IInspectable const&, IInspectable const&)
+    void Stopwatch::Looper()
     {
-        if (IsWorking)
+        while (_State != local::StopwatchState::Stopped)
         {
-            _Duration = high_resolution_clock::now() - PausedTime;
-            _Working(*this, nullptr);
-        }
-        else
-        {
-            PausedTime = high_resolution_clock::now() - _Duration;
+            if (_State == local::StopwatchState::Working)
+            {
+                _Duration = steady_clock::now() - PausedTime;
+                _Working(*this, nullptr);
+            }
+            else
+            {
+                PausedTime = steady_clock::now() - _Duration;
+            }
+            std::this_thread::sleep_for(_Interval);
         }
     }
 
     //Destructor
     Stopwatch::~Stopwatch()
     {
-        Timer.Stop();
-        Timer.Tick(et);
+        Reset();
         _Working.clear();
     }
 }

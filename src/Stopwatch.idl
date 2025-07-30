@@ -1,12 +1,15 @@
 namespace StopwatchCore
 {
     [default_interface]
-    unsealed runtimeclass Stopwatch 
+    [marshaling_behavior(agile)]
+    [threading(both)]
+    unsealed runtimeclass Stopwatch
     {
         Stopwatch();
 
         Double Duration{ get; };
         Windows.Foundation.TimeSpan Interval{ get; set; };
+        StopwatchState State{ get; };
 
         Boolean Start();
         Boolean Pause();
@@ -16,4 +19,11 @@ namespace StopwatchCore
 
         event Windows.Foundation.TypedEventHandler<Stopwatch, Object> Working;
     }
+
+    enum StopwatchState
+    {
+        Stopped,
+        Working,
+        Paused
+    };
 }

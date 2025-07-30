@@ -1,17 +1,10 @@
 ﻿#pragma once
-#include "pch.h"
+
 #include "Stopwatch.g.h"
 
-using ns winrt;
-using ns Windows::Foundation;
-using ns Windows::UI::Xaml;
-
-using ns std;
-using ns std::chrono;
-
-ns winrt::StopwatchCore::implementation
+namespace winrt::StopwatchCore::implementation
 {
-    typedef TypedEventHandler<local::Stopwatch, IInspectable> WorkingEventHandler;
+    typedef Windows::Foundation::TypedEventHandler<local::Stopwatch, Windows::Foundation::IInspectable> WorkingEventHandler;
 
     struct Stopwatch : StopwatchT<Stopwatch>
     {
@@ -19,12 +12,16 @@ ns winrt::StopwatchCore::implementation
         Stopwatch();
 
         double Duration()
-        { return duration_cast<duration<double, milli>>(_Duration).count(); }
+        {
+            return std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(_Duration).count();
+        }
 
-        void Interval(TimeSpan const& interval)
-        { Timer.Interval(interval); }
-        TimeSpan Interval()
-        { return Timer.Interval(); }
+        void Interval(Windows::Foundation::TimeSpan const& interval)
+        { _Interval = interval; }
+        Windows::Foundation::TimeSpan Interval()
+        { return _Interval; }
+
+        local::StopwatchState State() { return _State; }
 
         bool Start();
         bool Pause();
@@ -34,24 +31,24 @@ ns winrt::StopwatchCore::implementation
 
         event_token Working(WorkingEventHandler const& handler)noexcept
         { return _Working.add(handler); }
-        void Working(event_token const token)
-        {  _Working.remove(token); }
+        void Working(event_token const token)noexcept
+        { _Working.remove(token); }
 
         ~Stopwatch();
 
     private:
-        bool IsRunning, IsWorking = false;
-        DispatcherTimer Timer;
-        steady_clock::time_point PausedTime;
-        nanoseconds _Duration = nanoseconds(-1);
+        local::StopwatchState _State = local::StopwatchState::Stopped;
+        Windows::Foundation::TimeSpan _Interval = std::chrono::milliseconds(95);
+        std::chrono::steady_clock::time_point PausedTime;
+        std::chrono::nanoseconds _Duration{ -1 };
         event<WorkingEventHandler> _Working;
-        event_token et;
+        std::thread _Action;
 
-        void Looper(IInspectable const&, IInspectable const&);
+        void Looper();
     };
 }
 
-ns winrt::StopwatchCore::factory_implementation
+namespace winrt::StopwatchCore::factory_implementation
 {
     struct Stopwatch : StopwatchT<Stopwatch, implementation::Stopwatch>
     {
