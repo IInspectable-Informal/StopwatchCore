@@ -2,7 +2,8 @@
 
 ## 简介
 
-本项目是秒表的UWP版实现，使用C++/WinRT编写。
+本项目是秒表的WinRT版实现，使用C++/WinRT编写。
+###### 更新：解除了对Windows.UI.Xaml.DispatcherTimer的依赖，意味着Win32应用也可以使用这个项目
 
 ## 使用方法
 
@@ -16,5 +17,4 @@
 
 ## 注意事项
 
-本项目只能在UWP应用中使用（和使用Windows.UI.Xaml.DispatcherTimer类实现有关，本人确实想不到更好的办法了，如果有意见，欢迎在[Issues](https://github.com/IInspectable-Informal/StopwatchCore/issues)和平讨论。
-如果需要WinAppSDK版，可能需要过一段时间才会出（既然是桌面应用，各种Win32API都可以随意调用，还有好多第三方库都可以调用，为什么要等我呢）。
+若在UWP/WinAppSDK项目中使用，请注意：Stopwatch.Working事件由后台线程触发，如果要通过该事件操作UI控件，请切换到相应的UI线程进行操作！！！
